@@ -88,25 +88,35 @@ def generate_random_list(size: int) -> list:
     return my_list
 
 
-def benchmark_sorters():
+def generate_sorted_list(size: int) -> list:
+    return list(range(size))
+
+
+def generate_list_with_duplicates(size: int, num_unique: int = 10) -> list:
+    from random import choices
+    base = list(range(num_unique))
+    return choices(base, k=size)
+
+
+def run_benchmark_for_input_type(input_generator, label: str):
     sorter = Sorters()
-    sizes = [x * 1000 for x in range(1, 51)]  # de 1000 a 20000
+    sizes = [x * 1000 for x in range(1, 21)]  # de 1000 a 20000
     algorithms = ['merge_sort', 'heap_sort']
     times = {alg: [] for alg in algorithms}
     comparisons = {alg: [] for alg in algorithms}
 
+    print(f"\n==== Benchmark para listas {label} ====\n")
     for size in sizes:
-        test_list = generate_random_list(size)
+        test_list = input_generator(size)
 
         for alg in algorithms:
-            sorter.comparisons = 0  # reseta antes de cada chamada
+            sorter.comparisons = 0
 
-            # Mede tempo de execução
             timer = timeit.Timer(
                 f'sorter.{alg}(test_list.copy())',
                 globals={'sorter': sorter, 'test_list': test_list}
             )
-            elapsed = min(timer.repeat(repeat=3, number=1)) * 1000  # milissegundos
+            elapsed = min(timer.repeat(repeat=3, number=1)) * 1000
 
             times[alg].append(elapsed)
             comparisons[alg].append(sorter.comparisons)
@@ -120,7 +130,7 @@ def benchmark_sorters():
     plt.figure(figsize=(12, 6))
     for alg in algorithms:
         plt.plot(sizes, times[alg], marker='o', label=f"{alg} - tempo")
-    plt.title("Tempo de Execução dos Algoritmos de Ordenação")
+    plt.title(f"Tempo de Execução - Lista {label}")
     plt.xlabel("Tamanho da Entrada")
     plt.ylabel("Tempo (ms)")
     plt.legend()
@@ -130,19 +140,19 @@ def benchmark_sorters():
     # Gráfico de comparações
     plt.figure(figsize=(12, 6))
     for alg in algorithms:
-        plt.plot(
-            sizes,
-            comparisons[alg],
-            marker='x',
-            label=f"{alg} - comparações"
-        )
-    plt.title("Número de Comparações dos Algoritmos de Ordenação")
+        plt.plot(sizes, comparisons[alg], marker='x', label=f"{alg} - comparações")
+    plt.title(f"Número de Comparações - Lista {label}")
     plt.xlabel("Tamanho da Entrada")
     plt.ylabel("Comparações")
     plt.legend()
     plt.grid(True)
     plt.show()
 
+
+def benchmark_sorters():
+    run_benchmark_for_input_type(generate_random_list, "aleatória")
+    run_benchmark_for_input_type(generate_sorted_list, "ordenada")
+    run_benchmark_for_input_type(generate_list_with_duplicates, "com duplicatas")
 
 if __name__ == "__main__":
     benchmark_sorters()
